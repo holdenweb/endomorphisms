@@ -16,7 +16,7 @@ def tree_tidy(root: int, tree: dict):
         m = tree_tidy(n, tree)
         if m != n:
             tree[root][j] = m # replace ref to inessential node
-            tree[n] = -1 # mark as inessential (auxiliary)
+            tree[n] = [] # mark as inessential (auxiliary)
         if len(tree[root]) == 1:
             return m #carry down the next node ref
         else:
