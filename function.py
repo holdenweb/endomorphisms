@@ -1,4 +1,4 @@
-def tree_tidy(root, tree):
+def tree_tidy(root: int, tree: dict):
     """
     recursive routine to remove inessential nodes from a tree
 
@@ -21,3 +21,15 @@ def tree_tidy(root, tree):
             tree_tidy(m, tree) # pick up where we left off, with the replacement node
     return root # this line was the final piece of the jigsaw!
 
+def tree_tidy2(root, i_tree):
+    """
+    Take a rooted tree and return another rooted tree in which all essential
+    nodes index an empty list.
+    """
+    if root not in i_tree:
+        return root
+    for current in i_tree[root]:
+        while len(i_tree[current]) == 1:
+            i_tree[current], current = [], i_tree[current][0]
+        i_tree[current] = tree_tidy(current, i_tree[current])
+    return root
