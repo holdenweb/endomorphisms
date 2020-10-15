@@ -1,12 +1,11 @@
-from itertools import count
-
-from function import tree_tidy, tree_tidy2
+from function import tree_tidy, Node, tree_to_nodes
 
 def test_davids_first_example():
     """
     Verify the canoncial example from David.
     """
     tree = {1: [2, 3], 2: [4], 4: [5], 5: [6, 7], 3: [8, 9, 10]}
+    assert verify_mapping(tree, 1) == ""
     root = tree_tidy(1, tree)
     assert root == 1
     assert tree == {1: [5, 3], 2: -1, 4: -1, 5: [6, 7], 3: [8, 9, 10]}
@@ -17,31 +16,32 @@ def test_degenerate_case():
     assert root == 2
     assert tree == {1: [2], 2: []}
 
-def test_steves_rewrite():
-    """
-    Same data, different algorithm - we'll parameterise this later.
-    """
+
+def verify_mapping(m, root):
+    keys = set()
+    values = set()
+    for k, v in m.items():
+        keys.add(k)
+        for vv in v:
+            values.add(vv)
+    keys.discard(root)
+    if all(k in values for k in keys):
+        return ""
+    else:
+        return f"Keys {sorted(keys-{root})} Values {sorted(values)}"
+
+
+def test_tree_to_nodes():
+    Node.reset()
+    tree = {1:[2]}
+    ntree = tree_to_nodes(tree, 1)
+    assert ntree.id == 1
+    assert len(ntree.children) == 1
+    assert ntree.children[0].id == 2
+    Node.reset()
     tree = {1: [2, 3], 2: [4], 4: [5], 5: [6, 7], 3: [8, 9, 10]}
-    root = tree_tidy2(1, tree)
-    assert root == 1
-    assert tree == {1: [5, 3], 2: -1, 4: -1, 5: [6, 7], 3: [8, 9, 10]}
+    ntree = tree_to_nodes(tree, 1)
 
-class Node:
-    """
-    Represent a node in a tree. Each node is the root of a tree with zero or
-    more inessential nodes (defining a sequence of nodes from the root to the
-    first essential node) and a set of zero, two or more child nodes (nodes
-    with exactly one child are non-essential).
-
-    Each node is identified by a number. If not assigned by the caller a
-    seequence of ids is internall generated. To handle asynchronous
-    parallelism there should be a lock around the class `ids` attribute.
-    """
-    ids = count(1)
-    def __init__(self, nid=None, iness=None, children=None):
-        self.iness = [] if iness is None else iness
-        self.children = [] if children is None else children
-        self.id = next(self.ids) if nid is None else nid
 
 def test_nodes_are_sequenced():
     """
@@ -49,11 +49,11 @@ def test_nodes_are_sequenced():
     conflict between automatic numbers and those specified explicitly
     by the caller.
     """
+    Node.reset()
     a = Node()
     b = Node()
     c = Node()
     assert (a.id, b.id, c.id) == (1, 2, 3)
 
 if __name__ == '__main__':
-    test_davids_first_example()
-    test_steves_rewrite()
+    test_tree_to_nodes()
