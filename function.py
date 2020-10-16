@@ -108,10 +108,10 @@ class Node:
         """
         children = iness = ""
         if self.children:    # Give the full structure of the child tree
-            children = f"\n{pad}Children:"+"".join(f"\n{c._pretty(pad+' |')}" for c in self.children)
+            children = "".join(f"\n{c._pretty(pad+'| ')}" for c in self.children)
         if self.iness:       # Just list the Node names of inessentials
-            iness =  f"\n{pad}Iness:"+"".join(f"\n{pad+' |'}: Node {n.id}" for n in self.iness)
-        return f"{pad}Node {self.id}{iness}{children}"
+            iness =  ", ".join(f"{n.id}" for n in self.iness)
+        return f"{pad}Node {self.id}: ({iness}){children}"
 
     def pretty(self):
         """
