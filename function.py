@@ -86,7 +86,7 @@ class Node:
         """
         Represent node as a string
         """
-        return f"""<Node {self.id} - {len(self.iness)} inessential(s), {len(self.children)} child(ren)}>"""
+        return f"""<Node {self.id} - {len(self.iness)} inessential(s), {len(self.children)} child(ren)>"""
 
     def tidy(self):
         """
@@ -102,22 +102,22 @@ class Node:
             new_children.append(child)
         self.children = new_children
 
-    def _pretty(self, n, pad):
+    def _pretty(self, pad):
         """
         Prettify a node with each line padded on the left.
         """
         children = iness = ""
-        if n.children:    # Give the full structure of the child tree
-            children = (f"\n{pad}Children:"+"".join(f"\n{self._pretty(c, pad+' |')}" for c in n.children))
-        if n.iness:       # Just list the Node names of inessentials
-            iness =  (f"\n{pad}Iness:"+"".join(f"\n{pad+' |'}: Node {c.id}" for c in n.iness))
-        return f"{pad}Node {n.id}{iness}{children}"
+        if self.children:    # Give the full structure of the child tree
+            children = f"\n{pad}Children:"+"".join(f"\n{c._pretty(pad+' |')}" for c in self.children)
+        if self.iness:       # Just list the Node names of inessentials
+            iness =  f"\n{pad}Iness:"+"".join(f"\n{pad+' |'}: Node {n.id}" for n in self.iness)
+        return f"{pad}Node {self.id}{iness}{children}"
 
-    def pretty(self, n):
+    def pretty(self):
         """
         Prettify with no initial padding.
         """
-        return self._pretty(n, "")
+        return self._pretty("")
 
 def tree_to_nodes(tree, root):
     """
