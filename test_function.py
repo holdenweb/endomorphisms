@@ -11,7 +11,7 @@ def test_davids_first_example():
     assert tree == {1: [5, 3], 2: [], 4: [], 5: [6, 7], 3: [8, 9, 10]}
 
 def test_degenerate_case():
-    tree = {1: [2], 2:[]}
+    tree = {1: [2]}
     root = tree_tidy(1, tree)
     assert root == 2
     assert tree == {1: [2], 2: []}

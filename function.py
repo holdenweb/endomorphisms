@@ -2,7 +2,7 @@ from itertools import count
 
 def tree_tidy(root: int, tree: dict):
     """
-    recursive routine to remove inessential nodes from a tree
+    Remove inessential nodes from a tree.
 
     The tree is represented as a dict of nodes, whose keys are the node
     numbers and whose values are either a list of keys of connectyed nodes or
@@ -26,8 +26,12 @@ def tree_tidy(root: int, tree: dict):
 
 class Node:
     """
-    Represent a node in a tree. Each node is the root of a tree with zero or
-    more inessential nodes (defining a sequence of nodes from the root to the
+    Represents a node in a tree. The initial representation explicity includes
+    all arcs of the tree. Calling the tidy operation on a tree truncates the
+    representation by populating the inessential nodes collection.
+
+    After tidying each node is the root of a tree with zero or more
+    inessential nodes (defining a sequence of nodes from the root to the
     first essential node) and a set of zero, two or more child nodes (nodes
     with exactly one child are non-essential).
 
@@ -36,7 +40,9 @@ class Node:
     parallelism there should be a lock around the class `ids` attribute.
 
     The class also maintains a dict of instances to guard against the
-    duplication of ids..
+    duplication of ids. This is a slightly ugly implementation as it forces
+    us to re-initialise the colection for each new tree, but it serves until
+    we have time to implement something better.
     """
     ids = count(1)
     instances = {}
@@ -51,7 +57,9 @@ class Node:
 
     def __init__(self, nid:int=None, iness: list=None, children: list=None):
         """
-        Create an instance with given inessntial and child nodes.
+        Create an instance with given inessential and child nodes.
+        Most usually during tree construction nodes will be created
+        empty and with automtic numbering, but this may not always be the case.
         """
         self.iness = [] if iness is None else iness
         self.children = [] if children is None else children
@@ -61,18 +69,31 @@ class Node:
         self.instances[self.id] = self
 
     def add_child(self, n):
+        """
+        Provide an opaque way to manage inessentials, isolating the caller
+        from the implementation details of the node collection.
+        """
         self.children.append(n)
 
     def add_iness(self, n):
-        self.iness,append(n)
+        """
+        Provide an opaque way to manage inessentials, isolating the caller
+        fron the implementation details of the node collection.
+        """
+        self.iness.append(n)
 
     def __repr__(self):
-        return f"""<Node {self.id},
-        iness={[i for i in self.iness]},
-        children={[c for c in self.children]}>"""
+        """
+        Represent node as a string
+        """
+        return f"""<Node {self.id} - {len(self.iness)} inessential(s), {len(self.children)} child(ren)}>"""
 
     def tidy(self):
-        assert not self.iness, "Cannot tidy a tree more than once"
+        """
+        Reduce the tree by collecting inessential nodes and removing them
+        from the parent/child tree.
+        """
+        assert not self.iness, "This tree has already been tidied!"
         new_children = []
         for child in self.children:
             while len(child.children) == 1:
@@ -81,6 +102,22 @@ class Node:
             new_children.append(child)
         self.children = new_children
 
+    def _pretty(self, n, pad):
+        """
+        Prettify a node with each line padded on the left.
+        """
+        children = iness = ""
+        if n.children:    # Give the full structure of the child tree
+            children = (f"\n{pad}Children:"+"".join(f"\n{self._pretty(c, pad+' |')}" for c in n.children))
+        if n.iness:       # Just list the Node names of inessentials
+            iness =  (f"\n{pad}Iness:"+"".join(f"\n{pad+' |'}: Node {c.id}" for c in n.iness))
+        return f"{pad}Node {n.id}{iness}{children}"
+
+    def pretty(self, n):
+        """
+        Prettify with no initial padding.
+        """
+        return self._pretty(n, "")
 
 def tree_to_nodes(tree, root):
     """
