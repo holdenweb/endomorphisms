@@ -53,6 +53,16 @@ def test_nodes_to_tree():
     assert nntree == tree
     assert nnroot == root
 
+def test_various_manipulations():
+    Node.reset()
+    my_tree = {1: [2]}
+    ntree = tree_to_nodes(my_tree, 1)
+    assert set(Node.instances.keys()) == {1, 2}
+    nttree, new_root = nodes_to_tree(ntree)
+    assert len(nttree) == 1
+    assert set(Node.instances.keys()) == {1, 2}
+    assert nttree == my_tree
+
 def test_nodes_are_sequenced():
     """
     If automatic numbering is used, care must be taken to avoid
@@ -66,4 +76,4 @@ def test_nodes_are_sequenced():
     assert (a.id, b.id, c.id) == (1, 2, 3)
 
 if __name__ == '__main__':
-    test_nodes_to_tree()
+    test_various_manipulations()

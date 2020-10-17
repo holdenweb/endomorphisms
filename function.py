@@ -144,7 +144,7 @@ def tree_to_nodes(tree, root):
                             )
     return root_node
 
-def nodes_to_tree(root, tree={}):
+def nodes_to_tree(root, tree=None):
     """
     Given a node tree, produce the equivalent dict.
     If the root has inessential nodes, the first
@@ -160,6 +160,7 @@ def nodes_to_tree(root, tree={}):
     I've added more comment than is strictly necessary more
     to check my own logic than to guide readers.
     """
+    tree = {} if tree is None else tree
     result = tree
     #
     # Before assembling the children of this node, we
@@ -174,7 +175,7 @@ def nodes_to_tree(root, tree={}):
     # along the chain of inessential nodes.
     current_root = root
     while root.iness:  # re-root the tree at its first inessential node
-        new_root = root.iness.pop[-1]
+        new_root = root.iness.pop(-1)
         result[new_root.id] = children
         children = [current_root.id]
         current_root = new_root
