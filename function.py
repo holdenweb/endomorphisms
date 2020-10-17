@@ -88,19 +88,24 @@ class Node:
         """
         return f"""<Node {self.id} - {len(self.iness)} inessential(s), {len(self.children)} child(ren)>"""
 
-    def tidy(self):
+    def tidied(self):
         """
-        Reduce the tree by collecting inessential nodes and removing them
-        from the parent/child tree.
+        Restructure the tree, collecting inessential nodes and removing them
+        from the main tree. This recasting should allow us to handle the
+        case when the input root node is inessential, when the root node
+        will be the first essential node encountered, any intermediate
+        inessential nodes being utlimately collected in the new root's
+        `iness` collection. Since the root node may change, the method
+        returns the new root.
         """
-        assert not self.iness, "This tree has already been tidied!"
-        new_children = []
-        for child in self.children:
-            while len(child.children) == 1:
-                self.iness.append(child)
-                child = child.children[0]
-            new_children.append(child)
-        self.children = new_children
+        iness = []
+        root = self
+        while len(root.children) == 1:  # Node is inessential
+            iness.append(root)
+            root = root.children[0]
+            root.iness = iness
+        return root if not root.children else root.tidied()
+
 
     def _pretty(self, pad):
         """
@@ -138,4 +143,45 @@ def tree_to_nodes(tree, root):
                                  )
                             )
     return root_node
+
+def nodes_to_tree(root, tree={}):
+    """
+    Given a node tree, produce the equivalent dict.
+    If the root has inessential nodes, the first
+    of these becomes the new root, whose only child
+    is the next inessential node and so on. The
+    child of the final inessential node is the
+    original root. This formula is then repeated
+    recursively across the children.
+
+    I have a feeling this code is non-optimal and it certainly
+    needs more testing than it currently has.
+
+    I've added more comment than is strictly necessary more
+    to check my own logic than to guide readers.
+    """
+    result = tree
+    #
+    # Before assembling the children of this node, we
+    # need to ensure that all subtrees are already
+    # correctly represented in the result.
+    #
+    for child in root.children:
+        result, treeroot = nodes_to_tree(child, result)
+    # Assemble the child ids
+    children = [node.id for node in root.children]
+    # Now re-root the current tree by working back
+    # along the chain of inessential nodes.
+    current_root = root
+    while root.iness:  # re-root the tree at its first inessential node
+        new_root = root.iness.pop[-1]
+        result[new_root.id] = children
+        children = [current_root.id]
+        current_root = new_root
+    # Terminal nodes should not be explicitly represented
+    if children:
+        result[root.id] = children
+    # The result is now complete for this tree
+    return result, root.id
+
 

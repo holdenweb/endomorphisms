@@ -1,4 +1,4 @@
-from function import tree_tidy, Node, tree_to_nodes
+from function import tree_tidy, Node, tree_to_nodes, nodes_to_tree
 
 def test_davids_first_example():
     """
@@ -11,10 +11,11 @@ def test_davids_first_example():
     assert tree == {1: [5, 3], 2: [], 4: [], 5: [6, 7], 3: [8, 9, 10]}
 
 def test_degenerate_case():
-    tree = {1: [2]}
-    root = tree_tidy(1, tree)
-    assert root == 2
-    assert tree == {1: [2], 2: []}
+    tree = tree_to_nodes({1: [2]}, 1)
+    new_tree = tree.tidied()
+    assert new_tree.id  == 2
+    assert len(new_tree.iness) == 1
+    assert new_tree.iness[0].id ==1
 
 
 def verify_mapping(m, root):
@@ -43,6 +44,15 @@ def test_tree_to_nodes():
     ntree = tree_to_nodes(tree, 1)
 
 
+def test_nodes_to_tree():
+    Node.reset()
+    tree = {1: [2, 3], 2: [4], 4: [5], 5: [6, 7], 3: [8, 9, 10]}
+    root = 1
+    ntree = tree_to_nodes(tree, root)
+    nntree, nnroot =  nodes_to_tree(ntree)
+    assert nntree == tree
+    assert nnroot == root
+
 def test_nodes_are_sequenced():
     """
     If automatic numbering is used, care must be taken to avoid
@@ -56,4 +66,4 @@ def test_nodes_are_sequenced():
     assert (a.id, b.id, c.id) == (1, 2, 3)
 
 if __name__ == '__main__':
-    test_tree_to_nodes()
+    test_nodes_to_tree()
