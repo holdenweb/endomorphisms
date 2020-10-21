@@ -56,21 +56,21 @@ def test_various_manipulations():
     my_tree = {1: [2]}
     ntree = tree_to_nodes(my_tree, 1)
     nttree, new_root = nodes_to_tree(ntree)
-    print(ntree.pretty())
+    # print("Original tree", ntree.pretty(), sep='\n')
     assert len(nttree) == 2
     assert new_root == 1
     assert set(ntree.tree.instances.keys()) == {1, 2}
     assert tipless(nttree) == my_tree
     ntree = ntree.tidied()
-    print(ntree.pretty())
+    # print("Tidied version:", ntree.pretty(), sep='\n')
+    assert set(ntree.tree.instances.keys()) == {1, 2}
     # Note the the tree correctly renders as "Node 2 (1)",
     # Implying the tidied tree has 2 as the root and that
     # Node 1 is inessential.
-    nttree, new_root = nodes_to_tree(ntree)
-    assert len(nttree) == 2
+    ndtree, new_root = nodes_to_tree(ntree)
+    assert len(ndtree) == 2
     assert new_root == 2
-    assert len(nttree) == 2
-    assert set(ntree.tree.instances.keys()) == {1, 2}
+    assert len(ndtree) == 2
     assert nttree == {1: [2], 2: []}
 
 def test_nodes_are_sequenced():
