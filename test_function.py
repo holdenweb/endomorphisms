@@ -1,4 +1,5 @@
-from function import tree_tidy, Node, tree_to_nodes, nodes_to_tree
+from function import tipless, tree_tidy, Node, Tree, tree_to_nodes, nodes_to_tree
+
 
 def test_davids_first_example():
     """
@@ -9,6 +10,7 @@ def test_davids_first_example():
     root = tree_tidy(1, tree)
     assert root == 1
     assert tree == {1: [5, 3], 2: [], 4: [], 5: [6, 7], 3: [8, 9, 10]}
+
 
 def test_degenerate_case():
     tree = tree_to_nodes({1: [2]}, 1)
@@ -33,35 +35,43 @@ def verify_mapping(m, root):
 
 
 def test_tree_to_nodes():
-    Node.reset()
     tree = {1:[2]}
     ntree = tree_to_nodes(tree, 1)
     assert ntree.id == 1
     assert len(ntree.children) == 1
     assert ntree.children[0].id == 2
-    Node.reset()
     tree = {1: [2, 3], 2: [4], 4: [5], 5: [6, 7], 3: [8, 9, 10]}
     ntree = tree_to_nodes(tree, 1)
 
 
 def test_nodes_to_tree():
-    Node.reset()
     tree = {1: [2, 3], 2: [4], 4: [5], 5: [6, 7], 3: [8, 9, 10]}
     root = 1
     ntree = tree_to_nodes(tree, root)
     nntree, nnroot =  nodes_to_tree(ntree)
-    assert nntree == tree
+    assert tipless(nntree) == tree
     assert nnroot == root
 
 def test_various_manipulations():
-    Node.reset()
     my_tree = {1: [2]}
     ntree = tree_to_nodes(my_tree, 1)
-    assert set(Node.instances.keys()) == {1, 2}
     nttree, new_root = nodes_to_tree(ntree)
-    assert len(nttree) == 1
-    assert set(Node.instances.keys()) == {1, 2}
-    assert nttree == my_tree
+    print(ntree.pretty())
+    assert len(nttree) == 2
+    assert new_root == 1
+    assert set(ntree.tree.instances.keys()) == {1, 2}
+    assert tipless(nttree) == my_tree
+    ntree = ntree.tidied()
+    print(ntree.pretty())
+    # Note the the tree correctly renders as "Node 2 (1)",
+    # Implying the tidied tree has 2 as the root and that
+    # Node 1 is inessential.
+    nttree, new_root = nodes_to_tree(ntree)
+    assert len(nttree) == 2
+    assert new_root == 2
+    assert len(nttree) == 2
+    assert set(ntree.tree.instances.keys()) == {1, 2}
+    assert nttree == {1: [2], 2: []}
 
 def test_nodes_are_sequenced():
     """
@@ -69,10 +79,10 @@ def test_nodes_are_sequenced():
     conflict between automatic numbers and those specified explicitly
     by the caller.
     """
-    Node.reset()
-    a = Node()
-    b = Node()
-    c = Node()
+    tree = Tree()
+    a = tree.node()
+    b = tree.node()
+    c = tree.node()
     assert (a.id, b.id, c.id) == (1, 2, 3)
 
 if __name__ == '__main__':

@@ -1,5 +1,12 @@
 from itertools import count
 
+def tipless(d_tree):
+    """
+    Reduce a tree by removing childess nodes.
+    """
+    return {k:v for (k, v) in d_tree.items() if v}
+
+
 def tree_tidy(root: int, tree: dict):
     """
     Remove inessential nodes from a tree.
@@ -24,6 +31,27 @@ def tree_tidy(root: int, tree: dict):
     return root # this line was the final piece of the jigsaw!
 
 
+class Tree:
+
+    def __init__(self):
+        """
+        A tree is a related collection of nodes.
+        """
+        self.ids = count(1)
+        self.instances = {}
+
+    def node(self, nid:int=None, iness: list=None, children: list=None):
+        self.id = next(self.ids) if nid is None else nid
+        if self.id in self.instances:
+            raise ValueError(f"Node with id {self.id} already exists in {Tree!r}!")
+        node = Node(tree=self, nid=self.id, iness=iness, children=children)
+        self.instances[self.id] = node
+        return node
+
+    def nextid(self):
+        return next(self.ids)
+
+
 class Node:
     """
     Represents a node in a tree. The initial representation explicity includes
@@ -44,29 +72,17 @@ class Node:
     us to re-initialise the colection for each new tree, but it serves until
     we have time to implement something better.
     """
-    ids = count(1)
-    instances = {}
-
-    @classmethod
-    def reset(cls):
-        """
-        Forget about any existing nodes.
-        """
-        cls.ids = count(1)
-        cls.instances = {}
-
-    def __init__(self, nid:int=None, iness: list=None, children: list=None):
+    def __init__(self, tree, nid:int=None, iness: list=None, children: list=None):
         """
         Create an instance with given inessential and child nodes.
         Most usually during tree construction nodes will be created
         empty and with automtic numbering, but this may not always be the case.
         """
+        self.tree = tree
         self.iness = [] if iness is None else iness
         self.children = [] if children is None else children
-        self.id = next(self.ids) if nid is None else nid
-        if self.id in self.instances:
-            raise ValueError(f"Node with id {self.id} already exists!")
-        self.instances[self.id] = self
+        self.id = next(tree.ids) if nid is None else nid
+        self.tree.instances[self.id] = self
 
     def add_child(self, n):
         """
@@ -124,27 +140,31 @@ class Node:
         """
         return self._pretty("")
 
-def tree_to_nodes(tree, root):
+def tree_to_nodes(in_tree, root):
+     tree = Tree()
+     return _tree_to_nodes(in_tree, root, tree)
+
+def _tree_to_nodes(in_tree, root_id, tree):
     """
     Given a tree in David's dict representation, convert it to
     a node-based representation.
     """
-    root_node = Node(root)
-    if root not in tree:
+    root_node = Node(tree, nid=root_id)
+    if root_id not in in_tree:
         return root_node
-    for child in tree[root]:
-        if child in tree:
-            children = [tree_to_nodes(tree, grandchild)
-                        for grandchild in tree[child]]
+    for child in in_tree[root_id]:
+        if child in in_tree:
+            children = [_tree_to_nodes(in_tree, grandchild, tree)
+                        for grandchild in in_tree[child]]
         else:
             children = []
-        root_node.add_child(Node(nid=child,
+        root_node.add_child(Node(tree, nid=child,
                                  children=children
                                  )
                             )
     return root_node
 
-def nodes_to_tree(root, tree=None):
+def nodes_to_tree(root_node, d_tree=None):
     """
     Given a node tree, produce the equivalent dict.
     If the root has inessential nodes, the first
@@ -160,29 +180,27 @@ def nodes_to_tree(root, tree=None):
     I've added more comment than is strictly necessary more
     to check my own logic than to guide readers.
     """
-    tree = {} if tree is None else tree
-    result = tree
+    result = {} if d_tree is None else d_tree
     #
     # Before assembling the children of this node, we
     # need to ensure that all subtrees are already
     # correctly represented in the result.
     #
-    for child in root.children:
+    for child in root_node.children:
         result, treeroot = nodes_to_tree(child, result)
-    # Assemble the child ids
-    children = [node.id for node in root.children]
+    # Assemble the child ids of the root node
+    children = [node.id for node in root_node.children]
     # Now re-root the current tree by working back
     # along the chain of inessential nodes.
-    current_root = root
-    while root.iness:  # re-root the tree at its first inessential node
-        new_root = root.iness.pop(-1)
-        result[new_root.id] = children
-        children = [current_root.id]
-        current_root = new_root
+    current_root_node = root_node
+    result[current_root_node.id] = children
+    while current_root_node.iness:  # re-root the tree at its first inessential node
+        next_root_node = root_node.iness.pop(-1)
+        result[next_root_node.id] = [current_root_node.id]
+        children = [current_root_node.id]
+        current_root_node = next_root_node
     # Terminal nodes should not be explicitly represented
     if children:
-        result[root.id] = children
+        result[current_root_node.id] = children
     # The result is now complete for this tree
-    return result, root.id
-
-
+    return result, root_node.id
