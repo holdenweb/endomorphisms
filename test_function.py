@@ -1,4 +1,4 @@
-from function import tipless, tree_tidy, Node, Tree, tree_to_nodes, nodes_to_tree
+from function import tipless, tree_tidy, Node, Tree, tree_to_nodes, nodes_to_tree, verify_mapping
 
 
 def test_davids_first_example():
@@ -19,19 +19,6 @@ def test_degenerate_case():
     assert len(new_tree.iness) == 1
     assert new_tree.iness[0].id ==1
 
-
-def verify_mapping(m, root):
-    keys = set()
-    values = set()
-    for k, v in m.items():
-        keys.add(k)
-        for vv in v:
-            values.add(vv)
-    keys.discard(root)
-    if all(k in values for k in keys):
-        return ""
-    else:
-        return f"Keys {sorted(keys-{root})} Values {sorted(values)}"
 
 
 def test_tree_to_nodes():

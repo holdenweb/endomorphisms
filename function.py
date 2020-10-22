@@ -7,6 +7,23 @@ def tipless(d_tree):
     return {k:v for (k, v) in d_tree.items() if v}
 
 
+def verify_mapping(m, root):
+    """
+    Ensure that a dict really is a mapping, or return a message showing the difference.
+    """
+    keys = set()
+    values = set()
+    for k, v in m.items():
+        keys.add(k)
+        for vv in v:
+            values.add(vv)
+    keys.discard(root)
+    if all(k in values for k in keys):
+        return ""
+    else:
+        return f"Keys {sorted(keys-{root})} Values {sorted(values)}"
+
+
 def tree_tidy(root: int, tree: dict):
     """
     Remove inessential nodes from a tree.
