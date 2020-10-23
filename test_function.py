@@ -1,4 +1,12 @@
-from function import tipless, tree_tidy, Node, Tree, tree_to_nodes, nodes_to_tree, verify_mapping
+from function import (
+    tipless,
+    tree_tidy,
+    Node,
+    Tree,
+    tree_to_nodes,
+    nodes_to_tree,
+    verify_mapping,
+)
 
 
 def test_davids_first_example():
@@ -15,14 +23,13 @@ def test_davids_first_example():
 def test_degenerate_case():
     tree = tree_to_nodes({1: [2]}, 1)
     new_tree = tree.tidied()
-    assert new_tree.id  == 2
+    assert new_tree.id == 2
     assert len(new_tree.iness) == 1
-    assert new_tree.iness[0].id ==1
-
+    assert new_tree.iness[0].id == 1
 
 
 def test_tree_to_nodes():
-    tree = {1:[2]}
+    tree = {1: [2]}
     ntree = tree_to_nodes(tree, 1)
     assert ntree.id == 1
     assert len(ntree.children) == 1
@@ -35,9 +42,10 @@ def test_nodes_to_tree():
     tree = {1: [2, 3], 2: [4], 4: [5], 5: [6, 7], 3: [8, 9, 10]}
     root = 1
     ntree = tree_to_nodes(tree, root)
-    nntree, nnroot =  nodes_to_tree(ntree)
+    nntree, nnroot = nodes_to_tree(ntree)
     assert tipless(nntree) == tree
     assert nnroot == root
+
 
 def test_various_manipulations():
     my_tree = {1: [2]}
@@ -60,6 +68,7 @@ def test_various_manipulations():
     assert len(ndtree) == 2
     assert nttree == {1: [2], 2: []}
 
+
 def test_nodes_are_sequenced():
     """
     If automatic numbering is used, care must be taken to avoid
@@ -72,5 +81,6 @@ def test_nodes_are_sequenced():
     c = tree.node()
     assert (a.id, b.id, c.id) == (1, 2, 3)
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     test_various_manipulations()

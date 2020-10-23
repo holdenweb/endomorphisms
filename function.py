@@ -1,10 +1,11 @@
 from itertools import count
 
+
 def tipless(d_tree):
     """
     Reduce a tree by removing childess nodes.
     """
-    return {k:v for (k, v) in d_tree.items() if v}
+    return {k: v for (k, v) in d_tree.items() if v}
 
 
 def verify_mapping(m, root):
@@ -29,27 +30,31 @@ def tree_tidy(root: int, tree: dict):
     Remove inessential nodes from a tree.
 
     The tree is represented as a dict of nodes, whose keys are the node
-    numbers and whose values are either a list of keys of connectyed nodes or
+    numbers and whose values are either a list of keys of connected nodes or
     -1.
+
+    One failing of the algorithm is that it transforms an existing tree,
+    making its input unavailable once its result i prodiuced.
+    This could be easily remedied by adding a further function that creates a
+    copy k before calling tree tidy.
     """
-    if root not in tree: # terminal node
+    if root not in tree:  # terminal node
         return root
     # terminal (single) nodes (which in tree are [elements of] values but not keys) are always preserved
 
     for j, n in enumerate(tree[root]):
         m = tree_tidy(n, tree)
         if m != n:
-            tree[root][j] = m # replace ref to inessential node
-            tree[n] = [] # mark as inessential (auxiliary)
+            tree[root][j] = m  # replace ref to inessential node
+            tree[n] = []  # mark as inessential (auxiliary)
         if len(tree[root]) == 1:
-            return m #carry down the next node ref
+            return m  # carry down the next node ref
         else:
-            tree_tidy(m, tree) # pick up where we left off, with the replacement node
-    return root # this line was the final piece of the jigsaw!
+            tree_tidy(m, tree)  # pick up where we left off, with the replacement node
+    return root  # this line was the final piece of the jigsaw!
 
 
 class Tree:
-
     def __init__(self):
         """
         A tree is a related collection of nodes.
@@ -57,7 +62,7 @@ class Tree:
         self.ids = count(1)
         self.instances = {}
 
-    def node(self, nid:int=None, iness: list=None, children: list=None):
+    def node(self, nid: int = None, iness: list = None, children: list = None):
         self.id = next(self.ids) if nid is None else nid
         if self.id in self.instances:
             raise ValueError(f"Node with id {self.id} already exists in {Tree!r}!")
@@ -89,7 +94,10 @@ class Node:
     us to re-initialise the colection for each new tree, but it serves until
     we have time to implement something better.
     """
-    def __init__(self, tree, nid:int=None, iness: list=None, children: list=None):
+
+    def __init__(
+        self, tree, nid: int = None, iness: list = None, children: list = None
+    ):
         """
         Create an instance with given inessential and child nodes.
         Most usually during tree construction nodes will be created
@@ -130,25 +138,28 @@ class Node:
         inessential nodes being utlimately collected in the new root's
         `iness` collection. Since the root node may change, the method
         returns the new root.
+
+        Since the transformation is lossless it is performed on the
+        input n-tree.
         """
         iness = []
-        root = self
+        root = self  # Start here, building a chain of one-child nodes
         while len(root.children) == 1:  # Node is inessential
-            iness.append(root)
-            root = root.children[0]
-            root.iness = iness
+            iness.append(root)  # So add it to the list
+            root = root.children[0]  # Add it to the list
+            root.iness = iness  # Move down the chain
+        # We aren't done until all subtrees are also done
         return root if not root.children else root.tidied()
-
 
     def _pretty(self, pad):
         """
         Prettify a node with each line padded on the left.
         """
         children = iness = ""
-        if self.children:    # Give the full structure of the child tree
+        if self.children:  # Give the full structure of the child tree
             children = "".join(f"\n{c._pretty(pad+'| ')}" for c in self.children)
-        if self.iness:       # Just list the Node names of inessentials
-            iness =  ", ".join(f"{n.id}" for n in self.iness)
+        if self.iness:  # Just list the Node names of inessentials
+            iness = ", ".join(f"{n.id}" for n in self.iness)
         return f"{pad}Node {self.id}: ({iness}){children}"
 
     def pretty(self):
@@ -157,29 +168,43 @@ class Node:
         """
         return self._pretty("")
 
+
 def tree_to_nodes(in_tree, root):
-     tree = Tree()
-     return _tree_to_nodes(in_tree, root, tree)
+    errs = verify_mapping(in_tree, root)
+    if errs:
+        raise ValueError(f"Error in mapping: {errs}")
+    tree = Tree()
+    return _tree_to_nodes(in_tree, root, tree)
+
 
 def _tree_to_nodes(in_tree, root_id, tree):
     """
-    Given a tree in David's dict representation, convert it to
+    Given a d-tree in David's representation, convert it to
     a node-based representation.
     """
+    # Create the root node. There is no way to handle the
+    # empty in_tree, wgich in any case would have no root_id.
     root_node = Node(tree, nid=root_id)
-    if root_id not in in_tree:
+    # If the root isn't in the tree then nothing else can be,
+    # since nodes not in the tree are terminal.
+    # This is OK everywhere except the top level, where it
+    # is not catered for (see empty tree coment above).
+    if root_id not in in_tree or not in_tree[root_id]:
         return root_node
+    # Recurse over child (sub)trees.
     for child in in_tree[root_id]:
-        if child in in_tree:
-            children = [_tree_to_nodes(in_tree, grandchild, tree)
-                        for grandchild in in_tree[child]]
+        if child in in_tree and in_tree[child]:
+            # This child is not a terminal node
+            children = [
+                _tree_to_nodes(in_tree, grandchild, tree)
+                for grandchild in in_tree[child]
+            ]
         else:
+            # This child is
             children = []
-        root_node.add_child(Node(tree, nid=child,
-                                 children=children
-                                 )
-                            )
+        root_node.add_child(Node(tree, nid=child, children=children))
     return root_node
+
 
 def nodes_to_tree(root_node, d_tree=None):
     """
