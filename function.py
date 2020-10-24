@@ -146,8 +146,8 @@ class Node:
         root = self  # Start here, building a chain of one-child nodes
         while len(root.children) == 1:  # Node is inessential
             iness.append(root)  # So add it to the list
-            root = root.children[0]  # Add it to the list
-            root.iness = iness  # Move down the chain
+            root = root.children[0]  # Move down the chain
+            root.iness = iness  # Add it to the list
         # We aren't done until all subtrees are also done
         return root if not root.children else root.tidied()
 
